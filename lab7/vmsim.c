@@ -43,7 +43,7 @@ void initPageTable (void);
 void initMemFrames (void);
 void showState (void);
 static int unused_frameNo (void);
-static uint LRU (void);
+static int LRU (void);
 
 
 // main:
@@ -119,18 +119,18 @@ int physicalAddress (uint vAddr, char action)
     
 	// invalid page index, return -1
 	if (ipage >= nPages) 
-	{
+	{		
 		return -1;
 	}
 
-	if (PageTable[ipage].status.loaded) // page is already loaded
+	if (PageTable[ipage].status.loaded == 1) // page is already loaded
 	{
 		if (action == 'W') // action is a write
 		{
 			PageTable[ipage].status.modified = 1; // set Modified flag 
 		}
 		PageTable[ipage].lastAccessed = clock; // update access time to current clock tick
-        pAddr = PageTable[ipage].frameNo * PAGESIZE + offset; // compute physical address
+        pAddr = PageTable[ipage].frameNo * PAGESIZE + offset; // compute physical address		
 	}
         
     else // page is not loaded
@@ -139,8 +139,8 @@ int physicalAddress (uint vAddr, char action)
         if (newframeNo == -1) // no available unused frame
 		{
 			// replace a currently loaded frame(LRU method)
-            uint LRUNo = LRU(); // Least Recently Used loaded page
-            nReplaces++;
+            int LRUNo = LRU(); // Least Recently Used loaded page
+			nReplaces++;
             if (PageTable[LRUNo].status.modified)
 			{
 				nSaves++;
@@ -148,33 +148,36 @@ int physicalAddress (uint vAddr, char action)
 			// set PageTable entry to "no longer loaded"
 			PageTable[LRUNo].status.loaded = 0;
 			PageTable[LRUNo].status.modified = 0;
+			PageTable[LRUNo].lastAccessed = -1;
             newframeNo = PageTable[LRUNo].frameNo; // use the frame that backed that page
+			PageTable[LRUNo].frameNo = -1;
 		}         
-
         // should now have a valid frame# to use
         nLoads++;
         // set PageTable entry for the new page
-		PageTable[ipage].frameNo = newframeNo; 
+		PageTable[ipage].frameNo = newframeNo;
+		MemFrames[newframeNo] = ipage;
         PageTable[ipage].status.loaded = 1;
 		if (action == 'W') // action is a write
 		{
 			PageTable[ipage].status.modified = 1; 
 		} 
 		PageTable[ipage].lastAccessed = clock; // update access time to current clock tick
-        pAddr = PageTable[ipage].frameNo * PAGESIZE + offset; // compute physical address
+        pAddr = (PageTable[ipage].frameNo * PAGESIZE + offset); // compute physical address
+		//printf(" = %d\n", offset);
 	}
         
     return pAddr;
 }
 
 // Least Recently Used loaded page
-static uint LRU (void)
+static int LRU (void)
 {
-	uint LRUNo;
+	int LRUNo = 0;
 	int least_timestamp = 9999999;
-	for (uint i = 0; i < nPages; i++)
+	for (int i = 0; i < nPages; i++)
 	{
-		if (PageTable[i].lastAccessed < least_timestamp)
+		if ((PageTable[i].lastAccessed < least_timestamp) && (PageTable[i].status.loaded == 1))
 		{
 			least_timestamp = PageTable[i].lastAccessed;
 			LRUNo = i;
@@ -193,6 +196,7 @@ static int unused_frameNo (void)
 		if (MemFrames[i] == -1) // frame is unused
 		{
 			frameNo = i;
+			break;
 		}
 	}
 
