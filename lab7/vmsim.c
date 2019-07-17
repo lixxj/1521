@@ -42,6 +42,8 @@ int physicalAddress (uint vAddr, char action);
 void initPageTable (void);
 void initMemFrames (void);
 void showState (void);
+static int unused_frameNo (void);
+static uint LRU (void);
 
 
 // main:
@@ -110,49 +112,92 @@ int main (int argc, char *argv[])
 // handles regular references, page faults and invalid addresses
 int physicalAddress (uint vAddr, char action)
 {
-	// extract page# and offset from vAddr
-	uint page# = vAddr / PAGESIZE;
+	// extract page index and offset from vAddr
+	uint ipage = vAddr / PAGESIZE;
 	uint offset = vAddr % PAGESIZE;
 	int pAddr;
     
-	// the page# is not valid, return -1
-	if (page# >= nPages) 
+	// invalid page index, return -1
+	if (ipage >= nPages) 
 	{
 		return -1;
 	}
 
-	if (PageTable[page#].status.loaded == 1) // the page is already loaded
+	if (PageTable[ipage].status.loaded) // page is already loaded
 	{
 		if (action == 'W') // action is a write
 		{
-			PageTable[page#].status.modified = 1; // set the Modified flag 
+			PageTable[ipage].status.modified = 1; // set Modified flag 
 		}
-        update the access time to the current clock tick, and
-        use the frame number and offset to compute a physical address
+		PageTable[ipage].lastAccessed = clock; // update access time to current clock tick
+        pAddr = PageTable[ipage].frameNo * PAGESIZE + offset; // compute physical address
 	}
         
-    else //the page is not loaded
+    else // page is not loaded
 	{
-		look for an unused frame;
-        if we find one, use that,
-        otherwise:
-            // we need to replace a currently loaded frame, so
-            find the Least Recently Used loaded page,
-            set its PageTable entry to indicate "no longer loaded",
-            increment the nReplaces counter,
-            increment the nSaves counter if modified, and
-            use the frame that backed that page.
+		int newframeNo = unused_frameNo(); // look for unused frame;
+        if (newframeNo == -1) // no available unused frame
+		{
+			// replace a currently loaded frame(LRU method)
+            uint LRUNo = LRU(); // Least Recently Used loaded page
+            nReplaces++;
+            if (PageTable[LRUNo].status.modified)
+			{
+				nSaves++;
+			}
+			// set PageTable entry to "no longer loaded"
+			PageTable[LRUNo].status.loaded = 0;
+			PageTable[LRUNo].status.modified = 0;
+            newframeNo = PageTable[LRUNo].frameNo; // use the frame that backed that page
+		}         
 
-        // we should now have a frame# to use, so:
-        increment the nLoads counter
-        set PageTable entry for the new page
-            (flags, frame#, accesstime=current clock tick), and
-        use the frame number and offset to compute a physical address
+        // should now have a valid frame# to use
+        nLoads++;
+        // set PageTable entry for the new page
+		PageTable[ipage].frameNo = newframeNo; 
+        PageTable[ipage].status.loaded = 1;
+		if (action == 'W') // action is a write
+		{
+			PageTable[ipage].status.modified = 1; 
+		} 
+		PageTable[ipage].lastAccessed = clock; // update access time to current clock tick
+        pAddr = PageTable[ipage].frameNo * PAGESIZE + offset; // compute physical address
 	}
         
     return pAddr;
 }
 
+// Least Recently Used loaded page
+static uint LRU (void)
+{
+	uint LRUNo;
+	int least_timestamp = 9999999;
+	for (uint i = 0; i < nPages; i++)
+	{
+		if (PageTable[i].lastAccessed < least_timestamp)
+		{
+			least_timestamp = PageTable[i].lastAccessed;
+			LRUNo = i;
+		}
+	}
+
+	return LRUNo;
+}
+
+// On success, new unused frame number is returned; On error, -1 is returned
+static int unused_frameNo (void) 
+{
+	int frameNo = -1;
+	for (int i = 0; i < nFrames; i++)
+	{
+		if (MemFrames[i] == -1) // frame is unused
+		{
+			frameNo = i;
+		}
+	}
+
+	return frameNo;
+}
 
 // allocate and initialise Page Table
 void initPageTable (void)
