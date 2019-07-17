@@ -91,7 +91,7 @@ char *rwxmode (mode_t mode, char *str)
 	switch (mode & S_IFMT) { // file type
 		case S_IFDIR:  str[0] = 'd'; break;
 		case S_IFREG:  str[0] = '-'; break;
-		case S_IFLNK:  str[0] = '1'; break;
+		case S_IFLNK:  str[0] = 'l'; break;
 		default:       str[0] = '?';
 	}
 

@@ -1,5 +1,5 @@
 // COMP1521 19t2 ... virtual memory simulator
-// XJ
+// modified by XJ
 
 #include <assert.h>
 #include <err.h>
@@ -8,7 +8,7 @@
 #include <sysexits.h>
 
 #define PAGESIZE 4096
-#define PAGEBITS 12
+#define PAGEBITS 12 // 4 KiB
 
 #define actionName(A) (((A) == 'R') ? "read from" : "write to")
 
@@ -110,17 +110,30 @@ int main (int argc, char *argv[])
 // handles regular references, page faults and invalid addresses
 int physicalAddress (uint vAddr, char action)
 {
-	// TODO
-	extract page# and offset from vAddr
-    if the page# is not valid, return -1
+	// extract page# and offset from vAddr
+	uint page# = vAddr / PAGESIZE;
+	uint offset = vAddr % PAGESIZE;
+	int pAddr;
+    
+	// the page# is not valid, return -1
+	if (page# >= nPages) 
+	{
+		return -1;
+	}
 
-    if the page is already loaded:
-        set the Modified flag if action is a write,
+	if (PageTable[page#].status.loaded == 1) // the page is already loaded
+	{
+		if (action == 'W') // action is a write
+		{
+			PageTable[page#].status.modified = 1; // set the Modified flag 
+		}
         update the access time to the current clock tick, and
         use the frame number and offset to compute a physical address
-
-    otherwise:
-        look for an unused frame;
+	}
+        
+    else //the page is not loaded
+	{
+		look for an unused frame;
         if we find one, use that,
         otherwise:
             // we need to replace a currently loaded frame, so
@@ -135,8 +148,9 @@ int physicalAddress (uint vAddr, char action)
         set PageTable entry for the new page
             (flags, frame#, accesstime=current clock tick), and
         use the frame number and offset to compute a physical address
-
-    return the physical address
+	}
+        
+    return pAddr;
 }
 
 
