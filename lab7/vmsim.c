@@ -24,7 +24,6 @@ typedef struct PTE {
 	int lastAccessed; // -1 if never accessed
 } PTE;
 
-
 // Global state:
 static PTE *PageTable; // process page table
 static int *MemFrames; // memory (each frame holds page #, or -1 if empty)
@@ -36,7 +35,6 @@ static uint
 	nReplaces = 0,     // how many Page replacements
 	clock = 0;         // clock ticks
 
-
 // Functions:
 int physicalAddress (uint vAddr, char action);
 void initPageTable (void);
@@ -44,7 +42,6 @@ void initMemFrames (void);
 void showState (void);
 static int unused_frameNo (void);
 static int LRU (void);
-
 
 // main:
 // read memory references
@@ -106,7 +103,6 @@ int main (int argc, char *argv[])
 
 	return EXIT_SUCCESS;
 }
-
 
 // map virtual address to physical address
 // handles regular references, page faults and invalid addresses
@@ -217,7 +213,6 @@ void initPageTable (void)
 		};
 }
 
-
 // allocate and initialise Memory Frames
 void initMemFrames (void)
 {
@@ -227,7 +222,6 @@ void initMemFrames (void)
 	for (uint i = 0; i < nFrames; i++)
 		MemFrames[i] = -1;
 }
-
 
 // dump contents of PageTable and MemFrames
 void showState (void)
