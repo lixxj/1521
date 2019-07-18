@@ -20,10 +20,8 @@
 #define FREE  0xAAAAAAAA
 
 /// Types:
-
 typedef unsigned int  uint;
 typedef unsigned char byte;
-
 typedef uintptr_t     addr; // an address as a numeric type
 
 /** The header for a chunk. */
@@ -47,18 +45,49 @@ struct heap {
 /** The heap proper. */
 static struct heap Heap;
 
-/// Functions:
+/// Local Functions:
 static addr heapMaxAddr (void);
+static int heap_size_regulation (int size);
 
 /** Initialise the Heap. */
 int initHeap (int size)
 {
-	Heap.nFree = 0;
-	Heap.freeElems = 0;
+	Heap.heapSize = heap_size_regulation (size); // legal heap size
+	
+	// allocate region of memory of heap size
+	// 1) Heap.heapMem points to the first byte of the allocated region
+	// 2) Zeroes out the entire region 
+	Heap.heapMem = calloc(Heap.heapSize, sizeof(byte)); 
+	assert(Heap.heapMem != NULL);
 
-	/// TODO ///
 
-	return 0; // this just keeps the compiler quiet
+
+	return 0; // If it is successfully able to do all of the above, initHeap() returns 0; otherwise, it returns -1
+}
+
+// legal heap size is returned
+static int heap_size_regulation (int size)
+{
+	int N; // legal heap size
+
+	if (size < 4096) // minimum heap size control (4096 bytes)
+	{
+		N = 4096;
+	}
+
+	switch (size % 4) // round UP to the nearest multiple of 4
+	{
+		case 3: 
+			N = size + 1;
+			break;
+		case 2: 
+			N = size + 2;
+			break;
+		case 1:
+			N = size + 3;
+	}
+	
+	return N;
 }
 
 /** Release resources associated with the heap. */
