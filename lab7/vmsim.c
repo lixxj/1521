@@ -160,13 +160,12 @@ int physicalAddress (uint vAddr, char action)
 		} 
 		PageTable[ipage].lastAccessed = clock; // update access time to current clock tick
         pAddr = (PageTable[ipage].frameNo * PAGESIZE + offset); // compute physical address
-		//printf(" = %d\n", offset);
 	}
         
     return pAddr;
 }
 
-// Least Recently Used loaded page
+// Least Recently Used loaded page number is returned
 static int LRU (void)
 {
 	int LRUNo = 0;
