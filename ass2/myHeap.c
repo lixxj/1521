@@ -47,7 +47,7 @@ static struct heap Heap;
 
 /// Local Functions:
 static addr heapMaxAddr (void);
-static int heap_size_regulation (int size);
+static uint heap_size_regulation (int size);
 
 /** Initialise the Heap. */
 int initHeap (int size)
@@ -56,38 +56,50 @@ int initHeap (int size)
 	
 	// allocate region of memory of heap size
 	// 1) Heap.heapMem points to the first byte of the allocated region
-	// 2) Zeroes out the entire region 
+	// 2) zeroes out the entire region 
 	Heap.heapMem = calloc(Heap.heapSize, sizeof(byte)); 
-	assert(Heap.heapMem != NULL);
+	if (Heap.heapMem == NULL)
+	{
+		return -1;
+	}
 
+	// initialise the region to be a single large free-space chunk
+	Heap.nFree = 1;
+	header *initial_chunk = (header *) Heap.heapMem;
+	initial_chunk->status = FREE;
+	initial_chunk->size = Heap.heapSize;
 
+	// allocate freeList array
+	Heap.freeList = calloc((Heap.heapSize / MIN_CHUNK), sizeof(header*)); 
+	if (Heap.freeList == NULL)
+	{
+		return -1;
+	}
+	Heap.freeList[0] = initial_chunk;
+	Heap.freeElems = 1;
 
-	return 0; // If it is successfully able to do all of the above, initHeap() returns 0; otherwise, it returns -1
+	return 0; // on successful initialisation
 }
 
 // legal heap size is returned
-static int heap_size_regulation (int size)
+static uint heap_size_regulation (int size)
 {
-	int N; // legal heap size
-
 	if (size < 4096) // minimum heap size control (4096 bytes)
 	{
-		N = 4096;
+		return 4096;
 	}
-
+	
 	switch (size % 4) // round UP to the nearest multiple of 4
 	{
 		case 3: 
-			N = size + 1;
-			break;
+			return size + 1;
 		case 2: 
-			N = size + 2;
-			break;
+			return size + 2;
 		case 1:
-			N = size + 3;
+			return size + 3;
+		default: // multiple of 4
+			return size;
 	}
-	
-	return N;
 }
 
 /** Release resources associated with the heap. */
