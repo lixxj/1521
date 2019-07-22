@@ -36,7 +36,7 @@ struct heap {
 	void  *heapMem;     /**< space allocated for Heap */
 	uint   heapSize;    /**< number of bytes in heapMem */
 	void **freeList;    /**< array of pointers to free chunks */
-	uint   freeElems;   /**< number of elements in freeList[] */
+	uint   freeElems;   /**< total number of elements in freeList[] */
 	uint   nFree;       /**< number of free chunks */
 };
 
@@ -47,6 +47,7 @@ static struct heap Heap;
 
 /// Local Functions:
 static addr heapMaxAddr (void);
+static uint up_multiple_of_4 (int size);
 static uint heap_size_regulation (int size);
 
 /** Initialise the Heap. */
@@ -70,13 +71,13 @@ int initHeap (int size)
 	initial_chunk->size = Heap.heapSize;
 
 	// allocate freeList array
-	Heap.freeList = calloc((Heap.heapSize / MIN_CHUNK), sizeof(header*)); 
+	Heap.freeElems = (Heap.heapSize / MIN_CHUNK);
+	Heap.freeList = calloc(Heap.freeElems, sizeof(header*)); 
 	if (Heap.freeList == NULL)
 	{
 		return -1;
 	}
 	Heap.freeList[0] = initial_chunk;
-	Heap.freeElems = 1;
 
 	return 0; // on successful initialisation
 }
@@ -89,7 +90,13 @@ static uint heap_size_regulation (int size)
 		return MIN_HEAP;
 	}
 	
-	switch (size % 4) // round UP to the nearest multiple of 4
+	return up_multiple_of_4 (size);
+}
+
+// round UP to the nearest multiple of 4
+static uint up_multiple_of_4 (int size)
+{
+	switch (size % 4) 
 	{
 		case 3: 
 			return size + 1;
@@ -112,9 +119,22 @@ void freeHeap (void)
 /** Allocate a chunk of memory large enough to store `size' bytes. */
 void *myMalloc (int size)
 {
-	/// TODO ///
+	// malloc size regulation
+	if (size < 1) 
+	{
+		return NULL;
+	}
+	size = up_multiple_of_4 (size) + sizeof(header);
 
-	return NULL; // this just keeps the compiler quiet
+	// find the smallest free chunk larger than size
+
+	// the free chunk is smaller than N + HeaderSize + MIN_CHUNK
+
+	// the free chunk is larger than N + HeaderSize + MIN_CHUNK
+	
+
+
+	return NULL;
 }
 
 /** Deallocate a chunk of memory. */
