@@ -84,9 +84,9 @@ int initHeap (int size)
 // legal heap size is returned
 static uint heap_size_regulation (int size)
 {
-	if (size < 4096) // minimum heap size control (4096 bytes)
+	if (size < MIN_HEAP) // minimum heap size control (4096 bytes)
 	{
-		return 4096;
+		return MIN_HEAP;
 	}
 	
 	switch (size % 4) // round UP to the nearest multiple of 4
