@@ -49,6 +49,7 @@ static struct heap Heap;
 static addr heapMaxAddr (void);
 static uint up_multiple_of_4 (int size);
 static uint heap_size_regulation (int size);
+static header *smallest_free_chunk_larger_than_size (int size);
 
 /** Initialise the Heap. */
 int initHeap (int size)
@@ -82,33 +83,6 @@ int initHeap (int size)
 	return 0; // on successful initialisation
 }
 
-// legal heap size is returned
-static uint heap_size_regulation (int size)
-{
-	if (size < MIN_HEAP) // minimum heap size control (4096 bytes)
-	{
-		return MIN_HEAP;
-	}
-	
-	return up_multiple_of_4 (size);
-}
-
-// round UP to the nearest multiple of 4
-static uint up_multiple_of_4 (int size)
-{
-	switch (size % 4) 
-	{
-		case 3: 
-			return size + 1;
-		case 2: 
-			return size + 2;
-		case 1:
-			return size + 3;
-		default: // multiple of 4
-			return size;
-	}
-}
-
 /** Release resources associated with the heap. */
 void freeHeap (void)
 {
@@ -126,14 +100,26 @@ void *myMalloc (int size)
 	}
 	size = up_multiple_of_4 (size) + sizeof(header);
 
-	// find the smallest free chunk larger than size
-
-	// the free chunk is smaller than N + HeaderSize + MIN_CHUNK
-
-	// the free chunk is larger than N + HeaderSize + MIN_CHUNK
+	// obtain the smallest free chunk larger than required malloc size
+	header *free_chunk = smallest_free_chunk_larger_than_size (size);
+	if (free_chunk == NULL) // no available chunk
+	{
+		return NULL;
+	}
 	
+	int split_entry = size + sizeof(header) + MIN_CHUNK;
 
+	if (free_chunk->size <  split_entry) // no chunk split
+	{
 
+	}
+	
+	if (free_chunk->size >= split_entry) // chunk split 
+	{
+		
+	}
+	
+	// return a pointer to the first usable byte of data in the chunk
 	return NULL;
 }
 
@@ -198,4 +184,42 @@ void dumpHeap (void)
 
 	if (onRow % 5 > 0)
 		printf ("\n");
+}
+
+////////////////////////////
+///// HELPER FUNCTIONS /////
+////////////////////////////
+
+// legal heap size is returned
+static uint heap_size_regulation (int size)
+{
+	if (size < MIN_HEAP) // minimum heap size control (4096 bytes)
+	{
+		return MIN_HEAP;
+	}
+	
+	return up_multiple_of_4 (size);
+}
+
+// round UP to the nearest multiple of 4
+static uint up_multiple_of_4 (int size)
+{
+	switch (size % 4) 
+	{
+		case 3: 
+			return size + 1;
+		case 2: 
+			return size + 2;
+		case 1:
+			return size + 3;
+		default: // multiple of 4
+			return size;
+	}
+}
+
+// smallest free chunk larger than size is returned
+static header *smallest_free_chunk_larger_than_size (int size)
+{
+
+	return NULL;
 }
