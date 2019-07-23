@@ -92,23 +92,28 @@ void *myMalloc (int size)
 		return NULL;
 	}
 	
-	// obtain the smallest free chunk larger than required malloc size
+	// obtain the smallest free chunk larger than or equals to required malloc size
 	header *free_chunk = smallest_free_chunk_larger_than_size (next_multiple_of_4 (size) + sizeof(header));
 	if (free_chunk == NULL) // no available chunk
 	{
 		return NULL;
 	}
 	
-	int split_entry = next_multiple_of_4 (size) + sizeof(header) + MIN_CHUNK; // next_multiple_of_4(N) + HeaderSize + MIN_CHUNK
+	// next_multiple_of_4(N) + HeaderSize + MIN_CHUNK
+	int split_entry = next_multiple_of_4 (size) + sizeof(header) + MIN_CHUNK; 
 
 	if (free_chunk->size <  split_entry) // no chunk split
 	{
-
+		// allocate the whole chunk
 	}
 	
 	if (free_chunk->size >= split_entry) // chunk split 
 	{
-		
+		// split into two chunks
+
+		// the lower chunk allocated for the request
+
+		// the upper chunk being a new free chunk
 	}
 	
 	// return a pointer to the first usable byte of data in the chunk
