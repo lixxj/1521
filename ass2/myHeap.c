@@ -47,7 +47,7 @@ static struct heap Heap;
 
 /// Local Functions:
 static addr heapMaxAddr (void);
-static uint up_multiple_of_4 (int size);
+static uint next_multiple_of_4 (int size);
 static uint heap_size_regulation (int size);
 static header *smallest_free_chunk_larger_than_size (int size);
 
@@ -83,13 +83,6 @@ int initHeap (int size)
 	return 0; // on successful initialisation
 }
 
-/** Release resources associated with the heap. */
-void freeHeap (void)
-{
-	free (Heap.heapMem);
-	free (Heap.freeList);
-}
-
 /** Allocate a chunk of memory large enough to store `size' bytes. */
 void *myMalloc (int size)
 {
@@ -98,16 +91,15 @@ void *myMalloc (int size)
 	{
 		return NULL;
 	}
-	size = up_multiple_of_4 (size) + sizeof(header);
-
+	
 	// obtain the smallest free chunk larger than required malloc size
-	header *free_chunk = smallest_free_chunk_larger_than_size (size);
+	header *free_chunk = smallest_free_chunk_larger_than_size (next_multiple_of_4 (size) + sizeof(header));
 	if (free_chunk == NULL) // no available chunk
 	{
 		return NULL;
 	}
 	
-	int split_entry = size + sizeof(header) + MIN_CHUNK;
+	int split_entry = next_multiple_of_4 (size) + sizeof(header) + MIN_CHUNK; // next_multiple_of_4(N) + HeaderSize + MIN_CHUNK
 
 	if (free_chunk->size <  split_entry) // no chunk split
 	{
@@ -129,10 +121,53 @@ void myFree (void *obj)
 	/// TODO ///
 }
 
-/** Return the first address beyond the range of the heap. */
-static addr heapMaxAddr (void)
+////////////////////////////
+///// HELPER FUNCTIONS /////
+////////////////////////////
+
+// legal heap size is returned
+static uint heap_size_regulation (int size)
 {
-	return (addr) Heap.heapMem + Heap.heapSize;
+	if (size < MIN_HEAP) // minimum heap size control (4096 bytes)
+	{
+		return MIN_HEAP;
+	}
+	
+	return next_multiple_of_4 (size);
+}
+
+// round UP to the nearest multiple of 4
+static uint next_multiple_of_4 (int size)
+{
+	switch (size % 4) 
+	{
+		case 3: 
+			return size + 1;
+		case 2: 
+			return size + 2;
+		case 1:
+			return size + 3;
+		default: // multiple of 4
+			return size;
+	}
+}
+
+// smallest free chunk larger than size is returned
+static header *smallest_free_chunk_larger_than_size (int size)
+{
+
+	return NULL;
+}
+
+///////////////////////////////////
+///// END OF HELPER FUNCTIONS /////
+///////////////////////////////////
+
+/** Release resources associated with the heap. */
+void freeHeap (void)
+{
+	free (Heap.heapMem);
+	free (Heap.freeList);
 }
 
 /** Convert a pointer to an offset in the heap. */
@@ -186,40 +221,8 @@ void dumpHeap (void)
 		printf ("\n");
 }
 
-////////////////////////////
-///// HELPER FUNCTIONS /////
-////////////////////////////
-
-// legal heap size is returned
-static uint heap_size_regulation (int size)
+/** Return the first address beyond the range of the heap. */
+static addr heapMaxAddr (void)
 {
-	if (size < MIN_HEAP) // minimum heap size control (4096 bytes)
-	{
-		return MIN_HEAP;
-	}
-	
-	return up_multiple_of_4 (size);
-}
-
-// round UP to the nearest multiple of 4
-static uint up_multiple_of_4 (int size)
-{
-	switch (size % 4) 
-	{
-		case 3: 
-			return size + 1;
-		case 2: 
-			return size + 2;
-		case 1:
-			return size + 3;
-		default: // multiple of 4
-			return size;
-	}
-}
-
-// smallest free chunk larger than size is returned
-static header *smallest_free_chunk_larger_than_size (int size)
-{
-
-	return NULL;
+	return (addr) Heap.heapMem + Heap.heapSize;
 }
