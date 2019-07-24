@@ -19,6 +19,9 @@
 #define ALLOC 0x55555555
 #define FREE  0xAAAAAAAA
 
+#define SUCCESS        0
+#define FAILURE       -1
+
 /// Types:
 typedef unsigned int  uint;
 typedef unsigned char byte;
@@ -47,6 +50,7 @@ static struct heap Heap;
 
 /// Local Functions:
 static addr heapMaxAddr (void);
+/// Additional helper functions:
 static uint next_multiple_of_4 (int size);
 static uint heap_size_regulation (int size);
 static header *smallest_free_chunk_larger_than_size (int size);
@@ -60,27 +64,21 @@ int initHeap (int size)
 	// 1) Heap.heapMem points to the first byte of the allocated region
 	// 2) zeroes out the entire region 
 	Heap.heapMem = calloc(Heap.heapSize, sizeof(byte)); 
-	if (Heap.heapMem == NULL)
-	{
-		return -1;
-	}
-
+	if (Heap.heapMem == NULL) return FAILURE; // fail to allocate heap
+	
 	// initialise the region to be a single large free-space chunk
 	Heap.nFree = 1;
 	header *initial_chunk = (header *) Heap.heapMem;
 	initial_chunk->status = FREE;
 	initial_chunk->size = Heap.heapSize;
 
-	// allocate freeList array
+	// allocate freeList ARRAY
 	Heap.freeElems = (Heap.heapSize / MIN_CHUNK);
 	Heap.freeList = calloc(Heap.freeElems, sizeof(header*)); 
-	if (Heap.freeList == NULL)
-	{
-		return -1;
-	}
+	if (Heap.freeList == NULL) return FAILURE; // fail to allocate freeList
 	Heap.freeList[0] = initial_chunk;
 
-	return 0; // on successful initialisation
+	return SUCCESS; // on successful initialisation
 }
 
 /** Allocate a chunk of memory large enough to store `size' bytes. */
@@ -168,6 +166,10 @@ static header *smallest_free_chunk_larger_than_size (int size)
 ///// END OF HELPER FUNCTIONS /////
 ///////////////////////////////////
 
+////////////////////////////////
+///// OTHER HEAP FUNCTIONS /////
+////////////////////////////////
+
 /** Release resources associated with the heap. */
 void freeHeap (void)
 {
@@ -231,3 +233,7 @@ static addr heapMaxAddr (void)
 {
 	return (addr) Heap.heapMem + Heap.heapSize;
 }
+
+///////////////////////////////////////
+///// END OF OTHER HEAP FUNCTIONS /////
+///////////////////////////////////////
