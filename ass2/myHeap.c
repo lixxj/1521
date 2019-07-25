@@ -2,6 +2,7 @@
 // Heap Management System in C 
 // Written by Xingjian Li, z5190719, July/Aug 2019
 // Written by XJ
+// "Finally! A worthy opponent! in COMP1521"
 
 #include <assert.h>
 #include <stdint.h>
@@ -21,6 +22,9 @@
 
 #define SUCCESS        0
 #define FAILURE       -1
+
+#define SET        	   1
+#define CLEAR          0
 
 /// Types:
 typedef unsigned int  uint;
@@ -54,6 +58,10 @@ static addr heapMaxAddr (void);
 static uint next_multiple_of_4 (int size);
 static uint heap_size_regulation (int size);
 static header *smallest_free_chunk_larger_than_size (int size);
+static void insert_to_freeList (header *target_chunk);
+static void delete_from_freeList (header *target_chunk);
+static int binary_search (header *target, int low, int high, void *freeList[]);
+
 
 /** Initialise the Heap. */
 int initHeap (int size)
@@ -64,7 +72,11 @@ int initHeap (int size)
 	// 1) Heap.heapMem points to the first byte of the allocated region
 	// 2) zeroes out the entire region 
 	Heap.heapMem = calloc(Heap.heapSize, sizeof(byte)); 
-	if (Heap.heapMem == NULL) return FAILURE; // fail to allocate heap
+	if (Heap.heapMem == NULL) // fail to allocate heap
+	{ 
+		//fprintf(stderr, "Fatal: failed to allocate heap of %d bytes.\n", Heap.heapSize);
+		return FAILURE;
+   	}
 	
 	// initialise the region to be a single large free-space chunk
 	Heap.nFree = 1;
@@ -75,7 +87,12 @@ int initHeap (int size)
 	// allocate freeList ARRAY
 	Heap.freeElems = (Heap.heapSize / MIN_CHUNK);
 	Heap.freeList = calloc(Heap.freeElems, sizeof(header*)); 
-	if (Heap.freeList == NULL) return FAILURE; // fail to allocate freeList
+	if (Heap.freeList == NULL) // fail to allocate freeList
+	{
+		//fprintf(stderr, "Fatal: failed to allocate freeList of %u bytes.\n", Heap.freeElems);
+		if (Heap.heapMem != NULL) free(Heap.heapMem); // avoid memory leak
+		return FAILURE; 
+	}
 	Heap.freeList[0] = initial_chunk;
 
 	return SUCCESS; // on successful initialisation
@@ -84,38 +101,39 @@ int initHeap (int size)
 /** Allocate a chunk of memory large enough to store `size' bytes. */
 void *myMalloc (int size)
 {
-	// malloc size regulation
-	if (size < 1) 
-	{
-		return NULL;
-	}
+	// exception: NULL size
+	if (size < 1) return NULL;
 	
-	// obtain the smallest free chunk larger than or equals to required malloc size
-	header *free_chunk = smallest_free_chunk_larger_than_size (next_multiple_of_4 (size) + sizeof(header));
-	if (free_chunk == NULL) // no available chunk
-	{
-		return NULL;
-	}
+	int chunk_size = next_multiple_of_4 (size) + sizeof(header);
+	// obtain the smallest free chunk larger than or equals to legal malloc size
+	header *sfchunk = smallest_free_chunk_larger_than_size (chunk_size);
+	if (sfchunk == NULL) return NULL; // no chunk is available
 	
 	// next_multiple_of_4(N) + HeaderSize + MIN_CHUNK
-	int split_entry = next_multiple_of_4 (size) + sizeof(header) + MIN_CHUNK; 
+	int split_entry = chunk_size + MIN_CHUNK; 
 
-	if (free_chunk->size <  split_entry) // no chunk split
+	if (sfchunk->size < split_entry) // no chunk split
 	{
-		// allocate the whole chunk
+		sfchunk->status = ALLOC; // allocate the whole chunk
+		delete_from_freeList (sfchunk); // delete allocated chunk from freeList
 	}
 	
-	if (free_chunk->size >= split_entry) // chunk split 
+	if (sfchunk->size >= split_entry) // chunk split 
 	{
-		// split into two chunks
-
+		delete_from_freeList (sfchunk); // delete whole chunk from freeList
+		// the upper chunk become a new free chunk
+		addr nfchunk_start = (addr)sfchunk + chunk_size;
+		header *nfchunk = (header *)nfchunk_start;
+		nfchunk->status = FREE;
+		nfchunk->size = sfchunk->size - chunk_size;
+		insert_to_freeList (nfchunk);
 		// the lower chunk allocated for the request
-
-		// the upper chunk being a new free chunk
+		sfchunk->status = ALLOC;
+		sfchunk->size = chunk_size;		
 	}
 	
 	// return a pointer to the first usable byte of data in the chunk
-	return NULL;
+	return (sfchunk + sizeof(header));
 }
 
 /** Deallocate a chunk of memory. */
@@ -155,11 +173,68 @@ static uint next_multiple_of_4 (int size)
 	}
 }
 
-// smallest free chunk larger than size is returned
+// smallest free chunk larger than size is returned; NULL is returned if no chunk is available 
 static header *smallest_free_chunk_larger_than_size (int size)
 {
+	header *sfchunk = NULL;
+	int first_pointing_flag = CLEAR; // first time sfchunk points to a chunk
+	for (header *curr = Heap.freeList[0]; (addr)curr < heapMaxAddr(); curr = (curr + curr->size))
+	{
+		if (first_pointing_flag == CLEAR) // first time sfchunk points to a chunk
+		{
+			if (curr->status == FREE && curr->size >= size)
+			{
+				sfchunk = curr;
+				first_pointing_flag = SET;
+			}
+		} else // not first time sfchunk points to a chunk
+		{
+			if (curr->status == FREE && curr->size >= size && curr->size < sfchunk->size) 
+			{
+				sfchunk = curr;
+			}
+		}		
+	}
+	
+	return sfchunk;
+}
 
-	return NULL;
+// insert the free target chunk to freeList
+static void insert_to_freeList (header *target_chunk)
+{
+	int i;
+	for (i = Heap.nFree - 1; (i >= 0 && (addr)Heap.freeList[i] > (addr)target_chunk); i--) 
+	{
+		Heap.freeList[i+1] = Heap.freeList[i];
+	}
+	Heap.freeList[i+1] = target_chunk;
+	Heap.nFree++;
+}
+
+// delete the allocated target chunk from freeList
+static void delete_from_freeList (header *target_chunk)
+{
+	// obtain index of target chunk in freeList
+	int ichunk = binary_search (target_chunk, 0, Heap.nFree, Heap.freeList); 
+	if (ichunk == -1) return; // target chunk not found in freeList
+	
+	// deletion process
+	for (int i = ichunk; i < Heap.nFree - 1; i++) Heap.freeList[i] = Heap.freeList[i + 1];
+	Heap.nFree--;
+}
+
+// index of target in freeList is returned; -1 is returned if target not found
+static int binary_search (header *target, int low, int high, void *freeList[]) 
+{
+	if (high < low) return -1;
+	
+	int mid = (low + high) / 2;
+	
+	if ((addr)target == (addr)freeList[mid]) return mid;
+
+	if ((addr)target > (addr)freeList[mid]) return binary_search (target, mid + 1, high, freeList);
+	
+	return binary_search (target, low, mid - 1, freeList); // target < freeList[mid]
 }
 
 ///////////////////////////////////

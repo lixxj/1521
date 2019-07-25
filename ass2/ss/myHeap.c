@@ -1,6 +1,3 @@
-// COMP1521 18s1 Assignment 2
-// Implementation of heap management system
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,6 +66,7 @@ int initHeap(int size)
    freeElems = (int)arraySiz;
    return 0;
 }
+
 static void insertSorted(Addr key) {
    int i;
    for (i = nFree -1; (i >= 0 && freeList[i] > key); i--)
@@ -92,6 +90,7 @@ static void deleteSorted(Addr key) {
    }
    nFree--;
 }
+
 // do a binary search, and return index.
 static int bs(Addr key, int low, int high, Addr freeList[]){
    if(high < low)
@@ -103,6 +102,7 @@ static int bs(Addr key, int low, int high, Addr freeList[]){
       return bs(key, mid+1,high, freeList);
    return bs(key, low, mid-1, freeList);
 }
+
 static int roundUp(int size) {
    // If N is less than the minimum heap size (4096),
    // then N is set to the minimum heap size.
@@ -205,7 +205,7 @@ static void mergeAdjacent(){
    }
    
 }
-// merge two thingy
+// merge two thing
 static void mergeTwoAddress(void *b1, void *b2) {
    Header *m1 = (Header *)b1;
    Header *m2 = (Header *)b2;
