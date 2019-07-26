@@ -1,6 +1,6 @@
 // mysh.c ... a minimal shell
 // Started by John Shepherd, October 2017
-// Completed by <<YOU>>, July 2019
+// Completed by XJ, July 2019
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 #define DEFAULT_PATH "/bin:/usr/bin"
-#define DBUG
+//#define DBUG
 
 static void execute (char **, char **, char **);
 static bool isExecutable (char *);
@@ -46,22 +46,31 @@ int main (int argc, char *argv[])
 #endif
 
 	// main loop: print prompt, read line, execute command
-	char line[BUFSIZ];
+	char line_[BUFSIZ];
 	printf ("mysh$ ");
-	while (fgets (line, BUFSIZ, stdin) != NULL) {
-		trim (line); // remove leading/trailing space
+	while (fgets (line_, BUFSIZ, stdin) != NULL) {
+		char *line = trim (line_); // remove leading/trailing space
 		if (strcmp (line, "exit") == 0) break;
 		if (strcmp (line, "") == 0) { printf ("mysh$ "); continue; }
 
 		pid_t pid;   // pid of child process
 		int stat;	 // return status of child
 
+      	char **tokens = tokenise(line, " "); // tokenise the command
 		/// TODO: implement the `tokenise, fork, execute, cleanup' code
-
-		printf ("mysh$ ");
+		if ((pid = fork())!= 0) // parent process
+		{
+          	wait(&stat);
+          	// then cleans up the tokens and prints another prompt
+			freeTokens (tokens);
+			printf ("mysh$ ");
+      	} else // child process
+		{
+			execute(tokens, path, environ); // invokes the execute() function
+		}
 	}
 	printf ("\n");
-
+	
 	freeTokens (path);
 
 	return EXIT_SUCCESS;
@@ -70,7 +79,36 @@ int main (int argc, char *argv[])
 // execute: run a program, given command-line args, path and envp
 static void execute (char **args, char **path, char **envp)
 {
-	/// TODO: implement the `find-the-executable and execve(3) it' code
+	char *command = NULL; // final command string
+	char *arg = args[0]; // grab first char of arg
+	if ((arg[0] == '/') || (arg[0] == '.')) // form command string
+	{
+		if (isExecutable(args[0])) command = args[0];
+	} else 
+	{		
+		for (int i = 0; path[i] != NULL; i++) // search for an executable file
+		{ 
+			char *cmd = malloc(strlen(args[0]) + strlen(path[i]) + 1);
+			strcpy(cmd, path[i]);   // "dir"
+			strcat(cmd, "/");       // "/"
+			strcat(cmd, args[0]);   // "args[0]"		
+			if (isExecutable(cmd)) // found executable file, set command as file name
+			{
+				command = cmd;
+				break;
+			}
+		}
+	}
+	
+	if (command == NULL) // Command doesn't exist
+	{ 
+		printf("command not found");
+	} else // Command exists, execute the program
+	{ 
+		if (1) printf("Executing %s\n", command);
+		int stat = execve(command, args, envp);
+		if (stat == -1) perror("failed to execute command");
+	}
 }
 
 /// isExecutable: check whether this process can execute a file
