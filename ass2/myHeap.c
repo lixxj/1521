@@ -2,7 +2,6 @@
 // Heap Management System in C 
 // Written by Xingjian Li, z5190719, July/Aug 2019
 // Written by XJ
-// "Finally! A worthy opponent! in COMP1521"
 
 #include <assert.h>
 #include <stdint.h>
@@ -68,8 +67,8 @@ int initHeap (int size)
 {
 	Heap.heapSize = heap_size_regulation (size); // legal heap size
 	
-	// allocate region of memory of heap size
-	// 1) Heap.heapMem points to the first byte of the allocated region
+	// allocate region of memory of heap size 
+	// 1) Heap.heapMem points to the first byte of the allocated region 
 	// 2) zeroes out the entire region 
 	Heap.heapMem = calloc(Heap.heapSize, sizeof(byte)); 
 	if (Heap.heapMem == NULL) // fail to allocate heap
@@ -162,10 +161,7 @@ void myFree (void *obj)
 // legal heap size is returned
 static uint heap_size_regulation (int size)
 {
-	if (size < MIN_HEAP) // minimum heap size control (4096 bytes)
-	{
-		return MIN_HEAP;
-	}
+	if (size < MIN_HEAP) return MIN_HEAP; // minimum heap size control (4096 bytes)
 	
 	return next_multiple_of_4 (size);
 }
