@@ -61,7 +61,7 @@ static header *smallest_free_chunk_larger_than_size (int size);
 static void insert_to_freeList (header *target_chunk);
 static void delete_from_freeList (header *target_chunk);
 static int binary_search (header *target, int low, int high, void *freeList[]);
-
+static void adjchunks_merge (void);
 
 /** Initialise the Heap. */
 int initHeap (int size)
@@ -139,7 +139,20 @@ void *myMalloc (int size)
 /** Deallocate a chunk of memory. */
 void myFree (void *obj)
 {
-	/// TODO ///
+	if (obj == NULL) return; // exception: free(NULL)
+
+	header *chunktbf = (header*)obj - sizeof(header);
+
+	// an valid obj must be a pointer to the start of the data block in an allocated chunk
+	if (chunktbf->status != ALLOC) // invalid obj  
+	{
+		fprintf(stderr, "Attempt to free unallocated chunk\n");
+		exit(1);
+	}
+
+	chunktbf->status = FREE;
+	insert_to_freeList (chunktbf);
+	adjchunks_merge();
 }
 
 ////////////////////////////
@@ -235,6 +248,23 @@ static int binary_search (header *target, int low, int high, void *freeList[])
 	if ((addr)target > (addr)freeList[mid]) return binary_search (target, mid + 1, high, freeList);
 	
 	return binary_search (target, low, mid - 1, freeList); // target < freeList[mid]
+}
+
+// merge adjacent free chunks in the heap
+static void adjchunks_merge (void)
+{
+	header *curr, *next;
+	for (int i = 0; i < Heap.nFree; i++)
+	{
+		curr = Heap.freeList[i];
+		next = Heap.freeList[i+1];
+		while ((addr)(curr + curr->size) == (addr)next) // two adjacent free chunks
+		{ // merge process		
+			curr->size = curr->size + next->size;
+			next->status = 0;
+			delete_from_freeList(next); 
+		}		
+	}
 }
 
 ///////////////////////////////////
