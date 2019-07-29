@@ -57,29 +57,31 @@ int main (int argc, char *argv[])
 		int stat;	 // return status of child
 
       	char **tokens = tokenise(line, " "); // tokenise the command
-		/// TODO: implement the `tokenise, fork, execute, cleanup' code
-		if ((pid = fork())!= 0) // parent process
+		if (strcmp(tokens[0], "cd") == 0) 
 		{
-          	wait(&stat);
-          	// then cleans up the tokens and prints another prompt
-			freeTokens (tokens);
-			printf ("mysh$ ");
-      	} else // child process
+			if (tokens[1] == NULL) 
+			{
+				chdir(getenv("HOME"));
+			} else chdir(tokens[1]);				
+		} else if (strcmp(tokens[0], "pwd") == 0) 
 		{
-			if (strcmp(tokens[0], "cd") == 0) 
+			char *cwd = malloc(1000 * sizeof(char));
+			cwd = getcwd(cwd, 1000);
+			printf("%s\n", cwd);
+			free(cwd);
+		} else {
+			/// TODO: implement the `tokenise, fork, execute, cleanup' code
+			if ((pid = fork())!= 0) // parent process
 			{
-				chdir(tokens[1]);				
-			} else if (strcmp(tokens[0], "pwd") == 0) 
-			{
-				char *cwd = malloc(1000 * sizeof(char));
-				cwd = getcwd(cwd, 1000);
-				printf("%s", cwd);
-				free(cwd);				
-			} else 
+				wait(&stat);
+				// then cleans up the tokens and prints another prompt
+			} else // child process
 			{
 				execute(tokens, path, environ); // invokes the execute() function
 			}
 		}
+		freeTokens (tokens);
+		printf ("mysh$ ");
 	}
 	printf ("\n");
 	
@@ -115,7 +117,7 @@ static void execute (char **args, char **path, char **envp)
 	
 	if (command == NULL) // Command doesn't exist
 	{ 
-		printf("command not found");
+		printf("command not found\n");
 	} else // Command exists, execute the program
 	{ 
 		if (1) printf("Executing %s\n", command);
