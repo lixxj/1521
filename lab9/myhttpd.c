@@ -1,5 +1,4 @@
 // COMP1521 19t2 ... myhttpd.c: a very simple web server in C
-//
 // 2019-07-27	Jashank Jeremy <jashank.jeremy@unsw.edu.au>
 
 #include <sys/types.h>
@@ -97,7 +96,15 @@ int main (void)
 /// `queue_len'.
 static socket_t server_socket_new (in_port_t port, int queue_len)
 {
-	/// TODO ///
+	// call (in order) socket(2), then bind(2), then listen(2)
+
+	// create an IP socket in streaming mode;
+
+	// create a struct sockaddr_in where the address is something appropriate (for example, INADDR_ANY or INADDR_LOCALHOST) and the port number is in network byte order (for which you will want htons(3));
+
+	// bind the socket with that address, remembering you need to cast from a struct sockaddr_in reference to the generic struct sockaddr * type; and
+
+	// flag the socket as ready to listen, with the specified queue length.
 
 	return -1;
 }
