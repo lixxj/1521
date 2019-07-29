@@ -130,9 +130,8 @@ void *myMalloc (int size)
 		sfchunk->status = ALLOC;
 		sfchunk->size = chunk_size;		
 	}
-	
 	// return a pointer to the first usable byte of data in the chunk
-	return (sfchunk + sizeof(header));
+	return (sfchunk + 1);
 }
 
 /** Deallocate a chunk of memory. */
