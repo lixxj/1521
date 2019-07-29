@@ -66,7 +66,19 @@ int main (int argc, char *argv[])
 			printf ("mysh$ ");
       	} else // child process
 		{
-			execute(tokens, path, environ); // invokes the execute() function
+			if (strcmp(tokens[0], "cd") == 0) 
+			{
+				chdir(tokens[1]);				
+			} else if (strcmp(tokens[0], "pwd") == 0) 
+			{
+				char *cwd = malloc(1000 * sizeof(char));
+				cwd = getcwd(cwd, 1000);
+				printf("%s", cwd);
+				free(cwd);				
+			} else 
+			{
+				execute(tokens, path, environ); // invokes the execute() function
+			}
 		}
 	}
 	printf ("\n");
@@ -81,6 +93,7 @@ static void execute (char **args, char **path, char **envp)
 {
 	char *command = NULL; // final command string
 	char *arg = args[0]; // grab first char of arg
+	
 	if ((arg[0] == '/') || (arg[0] == '.')) // form command string
 	{
 		if (isExecutable(args[0])) command = args[0];
