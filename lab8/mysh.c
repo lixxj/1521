@@ -74,7 +74,6 @@ int main (int argc, char *argv[])
 			if ((pid = fork())!= 0) // parent process
 			{
 				wait(&stat);
-				// then cleans up the tokens and prints another prompt
 			} else // child process
 			{
 				execute(tokens, path, environ); // invokes the execute() function
@@ -83,8 +82,7 @@ int main (int argc, char *argv[])
 		freeTokens (tokens);
 		printf ("mysh$ ");
 	}
-	printf ("\n");
-	
+	printf ("\n");	
 	freeTokens (path);
 
 	return EXIT_SUCCESS;
@@ -94,9 +92,9 @@ int main (int argc, char *argv[])
 static void execute (char **args, char **path, char **envp)
 {
 	char *command = NULL; // final command string
-	char *arg = args[0]; // grab first char of arg
+	char *arg = args[0]; // first char of arg
 	
-	if ((arg[0] == '/') || (arg[0] == '.')) // form command string
+	if ((arg[0] == '/') || (arg[0] == '.'))
 	{
 		if (isExecutable(args[0])) command = args[0];
 	} else 
@@ -120,7 +118,7 @@ static void execute (char **args, char **path, char **envp)
 		printf("command not found\n");
 	} else // Command exists, execute the program
 	{ 
-		if (1) printf("Executing %s\n", command);
+		printf("Executing %s\n", command);
 		int stat = execve(command, args, envp);
 		if (stat == -1) perror("failed to execute command");
 	}
