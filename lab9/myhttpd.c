@@ -16,6 +16,7 @@
 #include <string.h>
 #include <sysexits.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #define CR   "\r"
 #define LF   "\n"
@@ -92,21 +93,34 @@ int main (void)
 }
 
 
-/// Creates a new socket on `port', with an accept queue length of
-/// `queue_len'.
+/// Creates a new socket on `port', with an accept queue length of `queue_len'
 static socket_t server_socket_new (in_port_t port, int queue_len)
 {
-	// call (in order) socket(2), then bind(2), then listen(2)
+	socket_t server;
+	if ((server = socket(AF_LOCAL, SOCK_STREAM, IPPROTO_IP)) == -1) // create an IP socket in streaming mode
+    { 
+        perror("failed to create socket"); 
+        exit(EXIT_FAILURE); 
+    } 
+	
+	struct sockaddr_in address; 
+	address.sin_family = AF_LOCAL; 
+    address.sin_addr.s_addr = INADDR_ANY; 
+    address.sin_port = htons(port); // network byte order
 
-	// create an IP socket in streaming mode;
+	if (bind(server, (struct sockaddr *)&address, sizeof(address)) < 0) // bind the socket with address
+    { 
+        perror("failed to bind socket with address"); 
+        exit(EXIT_FAILURE); 
+    } 
+	
+	if (listen(server, queue_len) < 0) // flag the socket as ready to listen
+    { 
+        perror("failed to listen"); 
+        exit(EXIT_FAILURE); 
+    } 
 
-	// create a struct sockaddr_in where the address is something appropriate (for example, INADDR_ANY or INADDR_LOCALHOST) and the port number is in network byte order (for which you will want htons(3));
-
-	// bind the socket with that address, remembering you need to cast from a struct sockaddr_in reference to the generic struct sockaddr * type; and
-
-	// flag the socket as ready to listen, with the specified queue length.
-
-	return -1;
+	return server;
 }
 
 
