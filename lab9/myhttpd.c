@@ -97,14 +97,14 @@ int main (void)
 static socket_t server_socket_new (in_port_t port, int queue_len)
 {
 	socket_t server;
-	if ((server = socket(AF_LOCAL, SOCK_STREAM, IPPROTO_IP)) == -1) // create an IP socket in streaming mode
+	if ((server = socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) == -1) // create an IP socket in streaming mode
     { 
         perror("failed to create socket"); 
         exit(EXIT_FAILURE); 
     } 
 	
 	struct sockaddr_in address; 
-	address.sin_family = AF_LOCAL; 
+	address.sin_family = AF_INET; 
     address.sin_addr.s_addr = INADDR_ANY; 
     address.sin_port = htons(port); // network byte order
 
@@ -159,7 +159,7 @@ static bool handle_connection (
 		H_CONTENT_TYPE ": " MIME_PLAIN_UTF8 CRLF
 		H_SERVER ": " SERVER_NAME CRLF
 		CRLF
-		"Surprise!"
+		"<:sǝssɐlƃ ʇnoɥʇᴉʍ ǝʇnɔ sᴉ ɐuᴉ⅁"
 	};
 	size_t response_len = strlen (response);
 
@@ -174,7 +174,6 @@ static bool handle_connection (
 
 	return true;
 }
-
 
 /// Format an IPv4 address as four decimal values from 0 to 255.
 static void addr_to_dotted_octets (uint32_t addr, char *buf)
