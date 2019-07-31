@@ -137,9 +137,9 @@ void *myMalloc (int size)
 /** Deallocate a chunk of memory. */
 void myFree (void *obj)
 {
-	if (obj == NULL) return; // exception: free(NULL)
+	if (obj == NULL) return; // exception: free (NULL)
 
-	header *chunktbf = (header*)obj - sizeof(header);
+	header *chunktbf = (header*)obj - 1;
 
 	// an valid obj must be a pointer to the start of the data block in an allocated chunk
 	if (chunktbf->status != ALLOC) // invalid obj  
@@ -253,12 +253,17 @@ static void adjchunks_merge (void)
 	{
 		curr = Heap.freeList[i];
 		next = Heap.freeList[i+1];
+		
+		printf("before curr addr is %lu\n", (addr)(curr + curr->size));
+		printf("before addr is %lu\n", (addr)next);
+		printf("size is %d\n", curr->size);
 		while ((addr)(curr + curr->size) == (addr)next) // two adjacent free chunks
 		{ // merge process		
+			printf("%d: curr addr is %lu\n", i, (addr)(curr + curr->size));
+			printf("%d: next addr is %lu\n", i, (addr)next);
 			curr->size = curr->size + next->size;
 			next->status = 0;
 			delete_from_freeList(next); 
-			Heap.nFree--;
 		}		
 	}
 }
