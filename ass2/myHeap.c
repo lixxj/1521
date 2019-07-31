@@ -249,7 +249,7 @@ static int binary_search (header *target, int low, int high, void *freeList[])
 static void adjchunks_merge (void)
 {
 	header *curr, *next;
-	for (int i = 0; i < Heap.nFree; i++)
+	for (int i = 0; i < Heap.nFree - 1; i++)
 	{
 		curr = Heap.freeList[i];
 		next = Heap.freeList[i+1];
@@ -258,6 +258,7 @@ static void adjchunks_merge (void)
 			curr->size = curr->size + next->size;
 			next->status = 0;
 			delete_from_freeList(next); 
+			Heap.nFree--;
 		}		
 	}
 }
