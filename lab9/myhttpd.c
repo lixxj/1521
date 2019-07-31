@@ -80,7 +80,8 @@ int main (void)
 			server,
 			(sockaddr *) &client_addr,
 			(socklen_t *) &client_addr_len)) >= 0
-	) {
+	) 
+	{
 		handle_connection (
 			client, client_addr, client_addr_len,
 			&n_requests, &n_responses);
@@ -136,6 +137,7 @@ static bool handle_connection (
 	char addr[12];
 	addr_to_dotted_octets (client_addr.sin_addr.s_addr, addr);
 	printf ("<--> Connection from %s:%hu!\n", addr, client_addr.sin_port);
+	//printf("addr is %s\n", addr);
 
 	/// Try to receive data from the socket into `request'.]
 	char request[BUFSIZ];
@@ -143,6 +145,7 @@ static bool handle_connection (
 	if ((request_len = recv (client, request, BUFSIZ, 0)) < 0) {
 		warn ("recv"); close (client); return false;
 	}
+	//printf("request is %s\n", request);
 
 	/// Make sure the request text is at least NUL-terminated,
 	/// before (hopefully) printing it as a string.
@@ -155,12 +158,13 @@ static bool handle_connection (
 
 	/// We always send back this response for any request.
 	char response[BUFSIZ] = {
-		"HTTP/1.0 200 OK" CRLF
-		H_CONTENT_TYPE ": " MIME_PLAIN_UTF8 CRLF
-		H_SERVER ": " SERVER_NAME CRLF
-		CRLF
-		"<:sǝssɐlƃ ʇnoɥʇᴉʍ ǝʇnɔ sᴉ ɐuᴉ⅁"
+			"HTTP/1.0 200 OK" CRLF
+			H_CONTENT_TYPE ": " MIME_PLAIN_UTF8 CRLF
+			H_SERVER ": " SERVER_NAME CRLF
+			CRLF
+			"DEFAULT RESPONSE"
 	};
+
 	size_t response_len = strlen (response);
 
 	printf ("---> Response %d:\n%s\n", (*n_responses)++, response);
