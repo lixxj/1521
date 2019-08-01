@@ -150,7 +150,7 @@ void myFree (void *obj)
 
 	chunktbf->status = FREE;
 	insert_to_freeList ((addr)chunktbf);
-	adjchunks_merge();adjchunks_merge();
+	adjchunks_merge();
 }
 
 ////////////////////////////
@@ -259,11 +259,13 @@ static void adjchunks_merge (void)
 		curr = Heap.freeList[i];
 		next = Heap.freeList[i+1];
 		
-		while ((addr)((char *)curr + curr->size) == (addr)next) // two adjacent free chunks
+		while ((addr)((byte *)curr + curr->size) == (addr)next) // two adjacent free chunks
 		{ // merge process		
-			curr->size = curr->size + next->size;
-			next->status = 0;
-			delete_from_freeList((addr)next); 
+			curr->size += next->size;		
+			for (int j = i+1; j < Heap.nFree - 1; j++) // delete next chunk from freeList
+				Heap.freeList[j] = Heap.freeList[j + 1];
+			next = Heap.freeList[i+1]; // update next free chunk	
+			Heap.nFree--;
 		}		
 	}
 }
