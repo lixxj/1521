@@ -46,8 +46,6 @@ struct heap {
 	uint   nFree;       /**< number of free chunks */
 };
 
-/// Variables:
-
 /** The heap proper. */
 static struct heap Heap;
 
@@ -86,7 +84,7 @@ int initHeap (int size)
 	// allocate freeList ARRAY
 	Heap.freeElems = (Heap.heapSize / MIN_CHUNK);
 	Heap.freeList = calloc(Heap.freeElems, sizeof(header*)); 
-	if (Heap.freeList == NULL) // fail to allocate freeList
+	if (Heap.freeList == NULL) // failed to allocate freeList
 	{
 		//fprintf(stderr, "Fatal: failed to allocate freeList of %u bytes.\n", Heap.freeElems);
 		if (Heap.heapMem != NULL) free(Heap.heapMem); // avoid memory leak
@@ -106,10 +104,10 @@ void *myMalloc (int size)
 	int chunk_size = next_multiple_of_4 (size) + sizeof(header);
 	// obtain the smallest free chunk larger than or equals to legal malloc size
 	header *sfchunk = smallest_free_chunk_larger_than_size (chunk_size);
+	
 	if (sfchunk == NULL) return NULL; // no chunk is available
 	
-	// next_multiple_of_4(N) + HeaderSize + MIN_CHUNK
-	int split_entry = chunk_size + MIN_CHUNK; 
+	int split_entry = chunk_size + MIN_CHUNK; // next_multiple_of_4(N) + HeaderSize + MIN_CHUNK
 
 	if (sfchunk->size < split_entry) // no chunk split
 	{
@@ -120,12 +118,14 @@ void *myMalloc (int size)
 	if (sfchunk->size >= split_entry) // chunk split 
 	{
 		delete_from_freeList ((addr)sfchunk); // delete whole chunk from freeList
+		
 		// the upper chunk become a new free chunk
-		addr nfchunk_start = (addr)((char *)sfchunk + chunk_size);
+		addr nfchunk_start = (addr)((byte *)sfchunk + chunk_size);
 		header *nfchunk = (header *)nfchunk_start;
 		nfchunk->status = FREE;
 		nfchunk->size = sfchunk->size - chunk_size;
 		insert_to_freeList ((addr)nfchunk);
+		
 		// the lower chunk allocated for the request
 		sfchunk->status = ALLOC;
 		sfchunk->size = chunk_size;		
@@ -188,7 +188,7 @@ static header *smallest_free_chunk_larger_than_size (int size)
 	int first_pointing_flag = CLEAR; // first time sfchunk points to a chunk
 	
 	addr curr = (addr)Heap.freeList[0];
-   	while (curr < heapMaxAddr()) 
+   	while (curr < heapMaxAddr()) // search within Heap
 	{
 		header *chunk = (header *)curr;
 		if (first_pointing_flag == CLEAR) // first time sfchunk points to a chunk
@@ -206,7 +206,7 @@ static header *smallest_free_chunk_larger_than_size (int size)
 			}
 		}		
 
-      	curr = (addr)((char *)curr + chunk->size);
+      	curr = (addr)((byte *)curr + chunk->size);
    	}
 
 	return sfchunk;
@@ -217,9 +217,7 @@ static void insert_to_freeList (addr target_chunk)
 {
 	int i;
 	for (i = Heap.nFree - 1; (i >= 0 && (addr)Heap.freeList[i] > target_chunk); i--) 
-	{
 		Heap.freeList[i+1] = Heap.freeList[i];
-	}
 	Heap.freeList[i+1] = (header *)target_chunk;
 	Heap.nFree++;
 }
@@ -229,10 +227,12 @@ static void delete_from_freeList (addr target_chunk)
 {
 	// obtain index of target chunk in freeList
 	int ichunk = binary_search (target_chunk, 0, Heap.nFree, Heap.freeList); 
+	
 	if (ichunk == -1) return; // target chunk not found in freeList
 	
-	// deletion process
-	for (int i = ichunk; i < Heap.nFree - 1; i++) Heap.freeList[i] = Heap.freeList[i + 1];
+	// deletion
+	for (int i = ichunk; i < Heap.nFree - 1; i++) 
+		Heap.freeList[i] = Heap.freeList[i + 1];
 	Heap.nFree--;
 }
 
@@ -247,7 +247,7 @@ static int binary_search (addr target, int low, int high, void *freeList[])
 
 	if (target > (addr)freeList[mid]) return binary_search (target, mid + 1, high, freeList);
 	
-	return binary_search (target, low, mid - 1, freeList); // target < freeList[mid]
+	/* target < freeList[mid] */ return binary_search (target, low, mid - 1, freeList);
 }
 
 // merge adjacent free chunks in the heap
