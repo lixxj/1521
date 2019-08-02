@@ -18,6 +18,7 @@
 
 #define ALLOC 0x55555555
 #define FREE  0xAAAAAAAA
+#define NO_STATUS 0x00000000
 
 #define SUCCESS        0
 #define FAILURE       -1
@@ -69,11 +70,8 @@ int initHeap (int size)
 	// 1) Heap.heapMem points to the first byte of the allocated region 
 	// 2) zeroes out the entire region 
 	Heap.heapMem = calloc(Heap.heapSize, sizeof(byte)); 
-	if (Heap.heapMem == NULL) // fail to allocate heap
-	{ 
-		//fprintf(stderr, "Fatal: failed to allocate heap of %d bytes.\n", Heap.heapSize);
-		return FAILURE;
-   	}
+	
+	if (Heap.heapMem == NULL) return FAILURE; // failed to allocate heap
 	
 	// initialise the region to be a single large free-space chunk
 	Heap.nFree = 1;
@@ -86,8 +84,7 @@ int initHeap (int size)
 	Heap.freeList = calloc(Heap.freeElems, sizeof(header*)); 
 	if (Heap.freeList == NULL) // failed to allocate freeList
 	{
-		//fprintf(stderr, "Fatal: failed to allocate freeList of %u bytes.\n", Heap.freeElems);
-		if (Heap.heapMem != NULL) free(Heap.heapMem); // avoid memory leak
+		free(Heap.heapMem); // avoid memory leak
 		return FAILURE; 
 	}
 	Heap.freeList[0] = initial_chunk;
@@ -98,11 +95,10 @@ int initHeap (int size)
 /** Allocate a chunk of memory large enough to store `size' bytes. */
 void *myMalloc (int size)
 {
-	// exception: NULL size
-	if (size < 1) return NULL;
+	if (size < 1) return NULL; // exception: invalid malloc size
 	
-	int chunk_size = next_multiple_of_4 (size) + sizeof(header);
-	// obtain the smallest free chunk larger than or equals to legal malloc size
+	int chunk_size = next_multiple_of_4 (size) + sizeof(header); // required chunk size
+	// obtain the smallest free chunk larger than or equals to required chunk size
 	header *sfchunk = smallest_free_chunk_larger_than_size (chunk_size);
 	
 	if (sfchunk == NULL) return NULL; // no chunk is available
@@ -262,6 +258,7 @@ static void adjchunks_merge (void)
 		while ((addr)((byte *)curr + curr->size) == (addr)next) // two adjacent free chunks
 		{ // merge process		
 			curr->size += next->size;		
+			next->status = NO_STATUS;
 			for (int j = i+1; j < Heap.nFree - 1; j++) // delete next chunk from freeList
 				Heap.freeList[j] = Heap.freeList[j + 1];
 			next = Heap.freeList[i+1]; // update next free chunk	
