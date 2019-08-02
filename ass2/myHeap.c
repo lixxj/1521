@@ -56,6 +56,7 @@ static void insert_to_freeList (addr target_chunk);
 static void delete_from_freeList (addr target_chunk);
 static int binary_search (addr target, int low, int high, void *freeList[]);
 static void adjchunks_merge (void);
+static void bad_attempt_exit (void);
 
 // Initialise the Heap
 int initHeap (int size)
@@ -80,7 +81,7 @@ int initHeap (int size)
 	Heap.freeList = calloc(Heap.freeElems, sizeof(header*)); 
 	if (Heap.freeList == NULL) // failed to allocate freeList
 	{
-		free(Heap.heapMem); // avoid memory leak
+		freeHeap (); // avoid memory leak
 		return FAILURE; 
 	}
 	Heap.freeList[0] = initial_chunk;
@@ -129,22 +130,16 @@ void *myMalloc (int size)
 // Deallocate a chunk of memory
 void myFree (void *obj)
 {
-	if (obj == NULL) // exception: free (NULL)
-	{
-		fprintf(stderr, "Attempt to free unallocated chunk\n");
-		exit(1);
-	}
-
+	if (obj == NULL) bad_attempt_exit (); // exception: free (NULL)
+	
 	header *chunktbf = (header*)obj - 1; // locate the chunk
 
-	if (chunktbf->status != ALLOC) // invalid obj  
-	{
-		fprintf(stderr, "Attempt to free unallocated chunk\n");
-		exit(1);
-	}
+	if (chunktbf->status != ALLOC) bad_attempt_exit (); // invalid obj  
 
 	chunktbf->status = FREE;
+	
 	insert_to_freeList ((addr)chunktbf);
+	
 	adjchunks_merge ();
 }
 
@@ -213,7 +208,9 @@ static void insert_to_freeList (addr target_chunk)
 	int i;
 	for (i = Heap.nFree - 1; (i >= 0 && (addr)Heap.freeList[i] > target_chunk); i--) 
 		Heap.freeList[i+1] = Heap.freeList[i];
+	
 	Heap.freeList[i+1] = (header *)target_chunk;
+	
 	Heap.nFree++;
 }
 
@@ -228,6 +225,7 @@ static void delete_from_freeList (addr target_chunk)
 	// deletion
 	for (int i = ichunk; i < Heap.nFree - 1; i++) 
 		Heap.freeList[i] = Heap.freeList[i + 1];
+	
 	Heap.nFree--;
 }
 
@@ -264,6 +262,16 @@ static void adjchunks_merge (void)
 			Heap.nFree--;
 		}		
 	}
+}
+
+// write to stderr, free heap memory and exit program
+static void bad_attempt_exit (void)
+{
+	fprintf(stderr, "Attempt to free unallocated chunk\n");
+	
+	freeHeap (); // avoid memory leak
+	
+	exit (1);
 }
 ////////////////////////////////////
 ///// END OF PRIVATE FUNCTIONS /////

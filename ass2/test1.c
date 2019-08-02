@@ -19,5 +19,9 @@ int main (int argc, char *argv[])
 
 	dumpHeap ();
 
+	// THE FOLLOWING LINE IS ADDED BY XJ
+	freeHeap ();
+	// TO MAKE VALGRIND HAPPY
+
 	return EXIT_SUCCESS;
 }
