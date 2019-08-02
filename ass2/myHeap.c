@@ -11,14 +11,12 @@
 
 #include "myHeap.h"
 
-/** minimum total space for heap */
-#define MIN_HEAP 4096
-/** minimum amount of space for a free Chunk (excludes Header) */
-#define MIN_CHUNK 32
+#define MIN_HEAP 4096 // minimum total space for heap
+#define MIN_CHUNK 32 // minimum amount of space for a free Chunk (INCLUDES Header)
 
 #define ALLOC 0x55555555
 #define FREE  0xAAAAAAAA
-#define NO_STATUS 0x00000000
+#define REMOVED 0x00000000
 
 #define SUCCESS        0
 #define FAILURE       -1
@@ -26,19 +24,19 @@
 #define SET        	   1
 #define CLEAR          0
 
-/// Types:
+// Types:
 typedef unsigned int  uint;
 typedef unsigned char byte;
 typedef uintptr_t     addr; // an address as a numeric type
 
-/** The header for a chunk. */
+// The header for a chunk
 typedef struct header {
 	uint status;    /**< the chunk's status -- ALLOC or FREE */
 	uint size;      /**< number of bytes, including header */
 	byte data[];    /**< the chunk's data -- not interesting to us */
 } header;
 
-/** The heap's state */
+// The heap's state
 struct heap {
 	void  *heapMem;     /**< space allocated for Heap */
 	uint   heapSize;    /**< number of bytes in heapMem */
@@ -47,12 +45,10 @@ struct heap {
 	uint   nFree;       /**< number of free chunks */
 };
 
-/** The heap proper. */
-static struct heap Heap;
+static struct heap Heap; // The heap proper
 
-/// Local Functions:
+// Private Functions:
 static addr heapMaxAddr (void);
-/// Additional helper functions:
 static uint next_multiple_of_4 (int size);
 static uint heap_size_regulation (int size);
 static header *smallest_free_chunk_larger_than_size (int size);
@@ -61,7 +57,7 @@ static void delete_from_freeList (addr target_chunk);
 static int binary_search (addr target, int low, int high, void *freeList[]);
 static void adjchunks_merge (void);
 
-/** Initialise the Heap. */
+// Initialise the Heap
 int initHeap (int size)
 {
 	Heap.heapSize = heap_size_regulation (size); // legal heap size
@@ -92,7 +88,7 @@ int initHeap (int size)
 	return SUCCESS; // on successful initialisation
 }
 
-/** Allocate a chunk of memory large enough to store `size' bytes. */
+// Allocate a chunk of memory large enough to store `size' bytes
 void *myMalloc (int size)
 {
 	if (size < 1) return NULL; // exception: invalid malloc size
@@ -130,14 +126,17 @@ void *myMalloc (int size)
 	return (sfchunk + 1); // pointer to the first usable byte of data in the chunk
 }
 
-/** Deallocate a chunk of memory. */
+// Deallocate a chunk of memory
 void myFree (void *obj)
 {
-	if (obj == NULL) return; // exception: free (NULL)
+	if (obj == NULL) // exception: free (NULL)
+	{
+		fprintf(stderr, "Attempt to free unallocated chunk\n");
+		exit(1);
+	}
 
-	header *chunktbf = (header*)obj - 1;
+	header *chunktbf = (header*)obj - 1; // locate the chunk
 
-	// an valid obj must be a pointer to the start of the data block in an allocated chunk
 	if (chunktbf->status != ALLOC) // invalid obj  
 	{
 		fprintf(stderr, "Attempt to free unallocated chunk\n");
@@ -146,12 +145,12 @@ void myFree (void *obj)
 
 	chunktbf->status = FREE;
 	insert_to_freeList ((addr)chunktbf);
-	adjchunks_merge();
+	adjchunks_merge ();
 }
 
-////////////////////////////
-///// HELPER FUNCTIONS /////
-////////////////////////////
+/////////////////////////////
+///// PRIVATE FUNCTIONS /////
+/////////////////////////////
 
 // legal heap size is returned
 static uint heap_size_regulation (int size)
@@ -180,21 +179,21 @@ static uint next_multiple_of_4 (int size)
 // smallest free chunk larger than size is returned; NULL is returned if no chunk is available 
 static header *smallest_free_chunk_larger_than_size (int size)
 {
-	header *sfchunk = NULL;
+	header *sfchunk = NULL; // Smallest Free chunk larger than size
 	int first_pointing_flag = CLEAR; // first time sfchunk points to a chunk
 	
 	addr curr = (addr)Heap.freeList[0];
-   	while (curr < heapMaxAddr()) // search within Heap
+   	while (curr < heapMaxAddr ()) // search within Heap
 	{
 		header *chunk = (header *)curr;
-		if (first_pointing_flag == CLEAR) // first time sfchunk points to a chunk
+		if (first_pointing_flag == CLEAR) // the first time sfchunk points to a chunk
 		{
 			if (chunk->status == FREE && chunk->size >= size)
 			{
 				sfchunk = chunk;
 				first_pointing_flag = SET;
 			}
-		} else // not first time sfchunk points to a chunk
+		} else // not the first time sfchunk points to a chunk (ie. sfchunk != NULL)
 		{
 			if (chunk->status == FREE && chunk->size >= size && chunk->size < sfchunk->size) 
 			{
@@ -234,7 +233,7 @@ static void delete_from_freeList (addr target_chunk)
 
 // index of target in freeList is returned; -1 is returned if target not found
 static int binary_search (addr target, int low, int high, void *freeList[]) 
-{
+{ 
 	if (high < low) return -1;
 	
 	int mid = (low + high) / 2;
@@ -258,7 +257,7 @@ static void adjchunks_merge (void)
 		while ((addr)((byte *)curr + curr->size) == (addr)next) // two adjacent free chunks
 		{ // merge process		
 			curr->size += next->size;		
-			next->status = NO_STATUS;
+			next->status = REMOVED;
 			for (int j = i+1; j < Heap.nFree - 1; j++) // delete next chunk from freeList
 				Heap.freeList[j] = Heap.freeList[j + 1];
 			next = Heap.freeList[i+1]; // update next free chunk	
@@ -266,23 +265,22 @@ static void adjchunks_merge (void)
 		}		
 	}
 }
-
-///////////////////////////////////
-///// END OF HELPER FUNCTIONS /////
-///////////////////////////////////
+////////////////////////////////////
+///// END OF PRIVATE FUNCTIONS /////
+////////////////////////////////////
 
 ////////////////////////////////
 ///// OTHER HEAP FUNCTIONS /////
 ////////////////////////////////
 
-/** Release resources associated with the heap. */
+// Release resources associated with the heap
 void freeHeap (void)
 {
 	free (Heap.heapMem);
 	free (Heap.freeList);
 }
 
-/** Convert a pointer to an offset in the heap. */
+// Convert a pointer to an offset in the heap
 int heapOffset (void *obj)
 {
 	addr objAddr = (addr) obj;
@@ -294,7 +292,7 @@ int heapOffset (void *obj)
 		return (int) (objAddr - heapMin);
 }
 
-/** Dump the contents of the heap (for testing/debugging). */
+// Dump the contents of the heap (for testing/debugging)
 void dumpHeap (void)
 {
 	int onRow = 0;
@@ -333,12 +331,11 @@ void dumpHeap (void)
 		printf ("\n");
 }
 
-/** Return the first address beyond the range of the heap. */
+// Return the first address beyond the range of the heap
 static addr heapMaxAddr (void)
 {
 	return (addr) Heap.heapMem + Heap.heapSize;
 }
-
 ///////////////////////////////////////
 ///// END OF OTHER HEAP FUNCTIONS /////
 ///////////////////////////////////////
