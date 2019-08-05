@@ -172,16 +172,16 @@ static bool handle_connection (
 			"<style> body {background-color:#000000;background-repeat: no-repeat;background-image: url(https://scontent.fcbr1-1.fna.fbcdn.net/v/t1.0-9/57652729_445549106214761_2970664918266675200_n.jpg?_nc_cat=109&_nc_oc=AQlZHJgCNdOvyQTw9dH3W9xt_-7iWKh5XviAea0wwmAxCrUkPgzMibZIDJeQEe_VB7w&_nc_ht=scontent.fcbr1-1.fna&oh=263ef811224f5101e50e02516027b19b&oe=5DE07DF7);} </style><i><small>powered by XJ</i></small><br>"
 	};
 
-	if (strcmp("", url) == 0) strcat(response, "<h2 style= color:brown;>myhttpd running!</h2>");
-	else if (strcmp("hello", url) == 0) strcat(response, "<h2>Hello!</h2>");
-	else if (url[0]=='h'&&url[1]=='e'&&url[2]=='l'&&url[3]=='l'&&url[4]=='o'&&url[5]=='?') 
+	if (strcmp("", url) == 0) strcat(response, "<h2 style= color:brown;>myhttpd running!</h2>"); // default welcome page
+	else if (strcmp("hello", url) == 0) strcat(response, "<h2>Hello!</h2>"); // hello page
+	else if (url[0]=='h'&&url[1]=='e'&&url[2]=='l'&&url[3]=='l'&&url[4]=='o'&&url[5]=='?') // customized hello page
 	{
 		strcat(response, "ererf");
-	} else if (strcmp("date", url) == 0) 
+	} else if (strcmp("date", url) == 0) // show timestamp page
 	{
 		strcat(response, "date");
-	} else if (strcmp("gina", url) == 0) strcat(response, "<style> body{background-image: url(https://scontent.fcbr1-1.fna.fbcdn.net/v/t31.0-8/22382537_2054345751462049_8135870527978585586_o.jpg?_nc_cat=105&_nc_oc=AQn0NKF1yC0O4co4ZY37lun9QNA3Gqd6unPzd37StO1sx16nMz0Q6b65NQmigBjWhZ0&_nc_ht=scontent.fcbr1-1.fna&oh=a2ab50519147d1944d4b07c41dafb92a&oe=5DEA2BAA);} </style>");
-	else strcat(response, "<h2 style= color:Blue;>404 Page Not Found</h2>");
+	} /* u'd better not try this line */ else if (strcmp("gina", url) == 0) strcat(response, "<style> body{background-image: url(https://scontent.fcbr1-1.fna.fbcdn.net/v/t31.0-8/22382537_2054345751462049_8135870527978585586_o.jpg?_nc_cat=105&_nc_oc=AQn0NKF1yC0O4co4ZY37lun9QNA3Gqd6unPzd37StO1sx16nMz0Q6b65NQmigBjWhZ0&_nc_ht=scontent.fcbr1-1.fna&oh=a2ab50519147d1944d4b07c41dafb92a&oe=5DEA2BAA);} </style>");
+	else strcat(response, "<h2 style= color:Blue;>404 Page Not Found</h2>"); // 404 not found page
 	
 	size_t response_len = BUFSIZ;
 
