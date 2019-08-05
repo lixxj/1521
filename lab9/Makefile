@@ -1,7 +1,7 @@
 # COMP1521 19t2 ... lab 9 Makefile
 
 CC	= gcc
-CFLAGS	= -Wall -Werror -std=gnu11 -g
+CFLAGS	= -Wall -std=gnu11 -g
 
 .PHONY:	all
 all:	myhttpd

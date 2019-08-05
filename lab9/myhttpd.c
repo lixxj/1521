@@ -28,7 +28,7 @@
 #define H_CONTENT_TYPE "Content-Type"
 #define H_SERVER       "Server"
 
-#define MIME_PLAIN_UTF8 "text/plain; charset=utf-8"
+#define MIME_PLAIN_UTF8 "text/HTML; charset=utf-8"
 #define SERVER_NAME     "cs1521-19t2-lab09/1.0"
 
 /// To make it clear what's a socket and what's not, here's a handy
@@ -137,35 +137,43 @@ static bool handle_connection (
 	char addr[12];
 	addr_to_dotted_octets (client_addr.sin_addr.s_addr, addr);
 	printf ("<--> Connection from %s:%hu!\n", addr, client_addr.sin_port);
-	//printf("addr is %s\n", addr);
-
+	
 	/// Try to receive data from the socket into `request'.]
 	char request[BUFSIZ];
 	ssize_t request_len;
 	if ((request_len = recv (client, request, BUFSIZ, 0)) < 0) {
 		warn ("recv"); close (client); return false;
 	}
-	//printf("request is %s\n", request);
-
+	
 	/// Make sure the request text is at least NUL-terminated,
 	/// before (hopefully) printing it as a string.
-	///
 	/// Some web browsers insist on sending compressed requests; in
 	/// that case, you may find things go horribly awry, but there's
 	/// not much we can do in that case.
 	request[request_len] = '\0';
 	printf ("<--- Request %d:\n%s\n", (*n_requests)++, request);
 
-	/// We always send back this response for any request.
+	// obtain path(URL) from "request"
+	/*char URLpath[100] = "\0";
+	int i8 = 0;
+	int i9 = 5;
+	while (request[i9] != ' ')
+	{
+		URLpath[i8] = request[i9];
+		i8++;
+		i9++;
+	}
+	URLpath[i8] = '\0';*/
+	
 	char response[BUFSIZ] = {
 			"HTTP/1.0 200 OK" CRLF
 			H_CONTENT_TYPE ": " MIME_PLAIN_UTF8 CRLF
 			H_SERVER ": " SERVER_NAME CRLF
 			CRLF
-			"DEFAULT RESPONSE"
+			"<h2>myhttpd running!</h2>"
 	};
-
-	size_t response_len = strlen (response);
+	
+	size_t response_len = BUFSIZ;
 
 	printf ("---> Response %d:\n%s\n", (*n_responses)++, response);
 	if (send (client, response, response_len, 0) < (ssize_t) response_len) {
