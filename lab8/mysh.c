@@ -57,27 +57,23 @@ int main (int argc, char *argv[])
 		int stat;	 // return status of child
 
       	char **tokens = tokenise(line, " "); // tokenise the command
-		if (strcmp(tokens[0], "cd") == 0) 
+		if (strcmp(tokens[0], "cd") == 0) // handle "cd" command
 		{
 			if (tokens[1] == NULL) 
 			{
-				chdir(getenv("HOME"));
-			} else chdir(tokens[1]);				
-		} else if (strcmp(tokens[0], "pwd") == 0) 
+				chdir (getenv("HOME"));
+			} else chdir (tokens[1]);				
+		} else if (strcmp(tokens[0], "pwd") == 0) // handle "pwd" command
 		{
 			char *cwd = malloc(1000 * sizeof(char));
 			cwd = getcwd(cwd, 1000);
 			printf("%s\n", cwd);
 			free(cwd);
-		} else {
-			/// TODO: implement the `tokenise, fork, execute, cleanup' code
+		} else { // tokenise, fork, execute, cleanup
 			if ((pid = fork())!= 0) // parent process
 			{
 				wait(&stat);
-			} else // child process
-			{
-				execute(tokens, path, environ); // invokes the execute() function
-			}
+			} else execute(tokens, path, environ); // child process invoke execute()
 		}
 		freeTokens (tokens);
 		printf ("mysh$ ");
@@ -88,7 +84,7 @@ int main (int argc, char *argv[])
 	return EXIT_SUCCESS;
 }
 
-// execute: run a program, given command-line args, path and envp
+// run a program, given command-line args, path and envp
 static void execute (char **args, char **path, char **envp)
 {
 	char *command = NULL; // final command string
@@ -102,9 +98,9 @@ static void execute (char **args, char **path, char **envp)
 		for (int i = 0; path[i] != NULL; i++) // search for an executable file
 		{ 
 			char *cmd = malloc(strlen(args[0]) + strlen(path[i]) + 1);
-			strcpy(cmd, path[i]);   // "dir"
-			strcat(cmd, "/");       // "/"
-			strcat(cmd, args[0]);   // "args[0]"		
+			strcpy(cmd, path[i]);
+			strcat(cmd, "/");
+			strcat(cmd, args[0]); 		
 			if (isExecutable(cmd)) // found executable file, set command as file name
 			{
 				command = cmd;
