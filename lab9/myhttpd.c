@@ -176,12 +176,25 @@ static bool handle_connection (
 	else if (strcmp("hello", url) == 0) strcat(response, "<h2>Hello!</h2>"); // hello page
 	else if (url[0]=='h'&&url[1]=='e'&&url[2]=='l'&&url[3]=='l'&&url[4]=='o'&&url[5]=='?') // customized hello page
 	{
-		strcat(response, "ererf");
+		strcat(response, "<h2>Hello, ");
+		// obtain name from "request"
+		char name[100] = "\0";
+		int i_name = 0;
+		int i_url = 6; // name start from url[6]
+		while (url[i_url] != '\0')
+		{
+			name[i_name] = url[i_url];
+			i_name++;
+			i_url++;
+		}
+		strcat(response, name);
+		strcat(response, "!</h2>");
+
+		if (strcmp("gina", name) == 0) strcat(response, "<style> body{background-image: url(https://scontent.fcbr1-1.fna.fbcdn.net/v/t31.0-8/22382537_2054345751462049_8135870527978585586_o.jpg?_nc_cat=105&_nc_oc=AQn0NKF1yC0O4co4ZY37lun9QNA3Gqd6unPzd37StO1sx16nMz0Q6b65NQmigBjWhZ0&_nc_ht=scontent.fcbr1-1.fna&oh=a2ab50519147d1944d4b07c41dafb92a&oe=5DEA2BAA);} </style>");
 	} else if (strcmp("date", url) == 0) // show timestamp page
 	{
 		strcat(response, "date");
-	} /* u'd better not try this line */ else if (strcmp("gina", url) == 0) strcat(response, "<style> body{background-image: url(https://scontent.fcbr1-1.fna.fbcdn.net/v/t31.0-8/22382537_2054345751462049_8135870527978585586_o.jpg?_nc_cat=105&_nc_oc=AQn0NKF1yC0O4co4ZY37lun9QNA3Gqd6unPzd37StO1sx16nMz0Q6b65NQmigBjWhZ0&_nc_ht=scontent.fcbr1-1.fna&oh=a2ab50519147d1944d4b07c41dafb92a&oe=5DEA2BAA);} </style>");
-	else strcat(response, "<h2 style= color:Blue;>404 Page Not Found</h2>"); // 404 not found page
+	} else strcat(response, "<h2 style= color:Blue;>404 Page Not Found</h2>"); // 404 not found page
 	
 	size_t response_len = BUFSIZ;
 
@@ -209,3 +222,5 @@ static void addr_to_dotted_octets (uint32_t addr, char *buf)
 		addr       & 0xff
 	);
 }
+
+//static char *xjscanf()
