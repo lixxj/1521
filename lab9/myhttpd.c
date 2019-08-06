@@ -17,6 +17,7 @@
 #include <sysexits.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <time.h> 
 
 #define CR   "\r"
 #define LF   "\n"
@@ -173,7 +174,11 @@ static bool handle_connection (
 	};
 
 	if (strcmp("", url) == 0) strcat(response, "<h2 style= color:brown;>myhttpd running!</h2>"); // default welcome page
-	else if (strcmp("hello", url) == 0) strcat(response, "<h2>Hello!</h2>"); // hello page
+	else if (strcmp("hello", url) == 0) 
+	{
+		strcat(response, "<h2>Hello!</h2>"); // hello page
+		strcat(response, "<style> body{background-image: url(https://media1.tenor.com/images/31d5bffd520f3e14674f43f207dce4e3/tenor.gif?itemid=14261020);} </style>");
+	}
 	else if (url[0]=='h'&&url[1]=='e'&&url[2]=='l'&&url[3]=='l'&&url[4]=='o'&&url[5]=='?') // customized hello page
 	{
 		strcat(response, "<h2>Hello, ");
@@ -189,12 +194,18 @@ static bool handle_connection (
 		}
 		strcat(response, name);
 		strcat(response, "!</h2>");
-
-		if (strcmp("gina", name) == 0) strcat(response, "<style> body{background-image: url(https://scontent.fcbr1-1.fna.fbcdn.net/v/t31.0-8/22382537_2054345751462049_8135870527978585586_o.jpg?_nc_cat=105&_nc_oc=AQn0NKF1yC0O4co4ZY37lun9QNA3Gqd6unPzd37StO1sx16nMz0Q6b65NQmigBjWhZ0&_nc_ht=scontent.fcbr1-1.fna&oh=a2ab50519147d1944d4b07c41dafb92a&oe=5DEA2BAA);} </style>");
+		if (strcmp("XJ", name) == 0) strcat(response, "<style> body{background-image: url(https://scontent-syd2-1.xx.fbcdn.net/v/t1.0-9/37346145_281243319312008_8697206425329336320_n.jpg?_nc_cat=102&_nc_oc=AQkWVrQoy03fkelAlFp64uATYE0WgpP21WfVW_5aOHgyf0Gr-ETRx2mdo9jVM0BecGQ&_nc_ht=scontent-syd2-1.xx&oh=6249d3e2da7454a5237a86f4a0e72d74&oe=5DA2A254);} </style>");
+		if (strcmp("Nuck", name) == 0) strcat(response, "<style> body{background-image: url(https://scontent.fcbr1-1.fna.fbcdn.net/v/t1.0-9/57589815_10210673611675646_5797457361354358784_n.jpg?_nc_cat=109&_nc_oc=AQk603ApqZVnjUKZQBXz_rPdZ90twasVLKmexZN94W_aw_DK3NpV3cs7v-DOwOJGAIQ&_nc_ht=scontent.fcbr1-1.fna&oh=e31bb2dd5f03f4b2f3f2d284a68ecdd8&oe=5DD8AAB9);} </style>");
+		if (strcmp("Gina", name) == 0) strcat(response, "<style> body{background-image: url(https://scontent.fcbr1-1.fna.fbcdn.net/v/t31.0-8/22382537_2054345751462049_8135870527978585586_o.jpg?_nc_cat=105&_nc_oc=AQn0NKF1yC0O4co4ZY37lun9QNA3Gqd6unPzd37StO1sx16nMz0Q6b65NQmigBjWhZ0&_nc_ht=scontent.fcbr1-1.fna&oh=a2ab50519147d1944d4b07c41dafb92a&oe=5DEA2BAA);} </style>");
 	} else if (strcmp("date", url) == 0) // show timestamp page
 	{
-		strcat(response, "date");
-	} else strcat(response, "<h2 style= color:Blue;>404 Page Not Found</h2>"); // 404 not found page
+		time_t curtime; 
+      	time(&curtime);
+		char *timestr = ctime(&curtime);
+		strcat(response, "<h2>");
+		strcat(response, timestr);
+		strcat(response, "</h2>");
+	} else strcat(response, "<br><br><br><br><br><br><br><br><br><br><br><br><br><br><h2 style= color:Blue;>404 Page Not Found</h2><style> body{background-image: url(https://media.giphy.com/media/3o7btOHBo4Be8Io9IQ/giphy.gif);} </style>"); // 404 not found page
 	
 	size_t response_len = BUFSIZ;
 
@@ -222,5 +233,3 @@ static void addr_to_dotted_octets (uint32_t addr, char *buf)
 		addr       & 0xff
 	);
 }
-
-//static char *xjscanf()
