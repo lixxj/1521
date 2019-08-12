@@ -1,6 +1,6 @@
 // COMP1521 19T2 assignment2
 // Heap Management System in C 
-// Written by XJ
+// Written by Anthony Radley & XJ Li
 // DRAFT VERSION
 
 #include <stdio.h>
