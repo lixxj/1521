@@ -1,0 +1,4 @@
+a = malloc 100
+b = malloc 100
+free a
+c = malloc 70

@@ -1,0 +1,7 @@
+a = malloc 1000
+b = malloc 2000
+c = malloc 1900
+free b
+d = malloc 1000
+e = malloc 900
+f = malloc 85

@@ -1,0 +1,6 @@
+a = malloc 10
+b = malloc 10
+c = malloc 10
+d = malloc 10
+free c
+free b

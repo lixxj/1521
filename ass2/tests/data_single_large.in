@@ -1,0 +1,4 @@
+a = malloc 6000
+b = malloc 1000
+free b
+free a

@@ -1,0 +1,4 @@
+test3: couldn't allocate 0 bytes for `b'
++00000 (F, 5000) 
+[a] +00008 
++00000 (A,   12) +00012 (F, 4988) 

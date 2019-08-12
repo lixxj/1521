@@ -1,0 +1,10 @@
+a = malloc 40
+b = malloc 100
+c = malloc 40
+d = malloc 100
+free a
+free c
+a = malloc 20
+c = malloc 20
+free c
+free a

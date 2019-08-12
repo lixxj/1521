@@ -1,0 +1,2 @@
+a = malloc 1
+b = malloc 0

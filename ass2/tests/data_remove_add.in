@@ -1,0 +1,8 @@
+a = malloc 1000
+b = malloc 1000
+free a
+c = malloc 969
+d = malloc 1
+free c
+e = malloc 960
+f = malloc 1
