@@ -1,5 +1,7 @@
-// COMP1521 18s1 Assignment 2
-// Implementation of heap management system
+// COMP1521 19T2 assignment2
+// Heap Management System in C 
+// Written by XJ
+// DRAFT VERSION
 
 #include <stdio.h>
 #include <stdlib.h>
