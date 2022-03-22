@@ -9,7 +9,3 @@ Introduction to the systems-level view of computing, number representation, mach
 
 ### Course website(Webcms3) can be accessed via this link:
 https://webcms3.cse.unsw.edu.au/COMP1521/19T2/
-
-# BEWARE
-### UNSW plagiarism policy:
-https://student.unsw.edu.au/plagiarism
